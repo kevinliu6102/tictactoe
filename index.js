@@ -18,7 +18,7 @@ const generateSchemaPerTurn = (playerIdx) => {
   }]
 }
 
-const checkRow = () => {
+const checkRow = (board) => {
   return board.reduce(function(won, row) {
     won[0] = row[0];
     if (won[1] || row[0] === ' ') return won;
@@ -32,25 +32,25 @@ const checkRow = () => {
 }
 
 const checkCol = () => {
-  return board.reduce(function(won, row) {
-    won[0] = row[0];
-    if (won[1] || row[0] === ' ') return won;
-    return row.reduce(function(won, _, i) {
-      console.log('poop', won[0], row[i], won[0] === row[i]);
-      if (!won[1] && i > 0) {
-        return won;
-      }
-      return [won[0], won[0] === row[i]];
-    }, won)
-  }, [' ', false])
+  const cols = board.map((_, i) => board.map((row) => row[i]));
+  return checkRow(cols);
 }
 
 const checkDiag = () => {
-
+  let left = 0;
+  let right = 2;
+  const diags = board.reduce((diags, row) => {
+    diags[0].push(row[left++]);
+    diags[1].push(row[right--]);
+    return diags;
+  }, [[], []]);
+  return checkRow(diags);
 }
 
 const checkIfWon = () => {
-  return checkRow();
+  let winArr = [checkCol(), checkRow(board), checkDiag()];
+  console.log(winArr);
+  return winArr.some(winTuple => winTuple[1] === true);
 }
 
 const printBoard = () => {
@@ -70,7 +70,7 @@ const turn = () => prompt.get(generateSchemaPerTurn(currPlayer), function(err, r
   board[result.row][result.column] = currPlayer === 0 ? 'X' : 'O';
   const winner = checkIfWon();
   printBoard();
-  if (winner[1]) {
+  if (winner) {
     console.log(`${players[currPlayer]} wins!`)
     return;
   } else {
